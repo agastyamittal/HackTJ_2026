@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Backend runtime data
+backend/data/
+backend/models/best.pt
+*.pt
+
+# YOLO training outputs
+training/runs/
+
+# Node
+frontend/node_modules/
+frontend/build/
+
+# Misc
+.DS_Store
+*.log
