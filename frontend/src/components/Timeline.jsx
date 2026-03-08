@@ -6,6 +6,12 @@ function formatTime(sec) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+const STATUS_COLORS = {
+  green:  "#68d391",
+  yellow: "#f6e05e",
+  red:    "#fc8181",
+};
+
 export default function Timeline({ duration, currentTime, matchFrames, onSeek }) {
   const barRef = useRef(null);
 
@@ -31,12 +37,13 @@ export default function Timeline({ duration, currentTime, matchFrames, onSeek })
           duration &&
           matchFrames.map((f, i) => {
             const pct = (f.timestamp_sec / duration) * 100;
+            const color = STATUS_COLORS[f.status] || STATUS_COLORS.yellow;
             return (
               <div
                 key={i}
                 className="timeline-marker"
-                style={{ left: `${pct}%` }}
-                title={`Match at ${formatTime(f.timestamp_sec)}`}
+                style={{ left: `${pct}%`, background: color, borderColor: color }}
+                title={`${f.status} match (${Math.round(f.best_ratio * 100)}%) at ${formatTime(f.timestamp_sec)}${f.matched?.length ? " — " + f.matched.join(", ") : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSeek && onSeek(f.timestamp_sec);

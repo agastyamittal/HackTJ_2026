@@ -2,18 +2,21 @@ import React, { useState, useEffect, useCallback } from "react";
 import MapView from "../components/MapView";
 import ChatPanel from "../components/ChatPanel";
 import VideoPlayer from "../components/VideoPlayer";
-import { getUploads } from "../api";
+import { getUploads, getQueryMatches } from "../api";
 
 export default function MapPage() {
   const [highlightedCameraIds, setHighlightedCameraIds] = useState([]);
   const [cameraScores, setCameraScores] = useState({});
+  const [queryFeatures, setQueryFeatures] = useState([]);
   const [selectedUploadId, setSelectedUploadId] = useState(null);
+  const [matchFrames, setMatchFrames] = useState([]);
   const [toast, setToast] = useState(null);
 
-  const handleResults = (results, scores) => {
+  const handleResults = (results, scores, features) => {
     const ids = [...new Set(results.map((r) => r.camera_id))];
     setHighlightedCameraIds(ids);
     setCameraScores(scores || {});
+    setQueryFeatures(features || []);
   };
 
   const showToast = useCallback((msg) => {
@@ -34,6 +37,17 @@ export default function MapPage() {
       );
       if (match) {
         setSelectedUploadId(match.upload_id);
+        // Fetch per-frame query matches if a search has been performed
+        if (queryFeatures.length > 0) {
+          try {
+            const frames = await getQueryMatches(match.upload_id, queryFeatures);
+            setMatchFrames(frames);
+          } catch {
+            setMatchFrames([]);
+          }
+        } else {
+          setMatchFrames([]);
+        }
       } else {
         showToast(`No video available for ${cam.name}`);
       }
@@ -66,7 +80,7 @@ export default function MapPage() {
               >
                 ✕
               </button>
-              <VideoPlayer uploadId={selectedUploadId} />
+              <VideoPlayer uploadId={selectedUploadId} matchFrames={matchFrames} />
             </div>
           </>
         )}

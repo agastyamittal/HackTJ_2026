@@ -41,3 +41,8 @@ export const trackPerson = (uploadId, frameIdx, detectionIndex) =>
   api
     .post("/api/track", { upload_id: uploadId, frame_idx: frameIdx, detection_index: detectionIndex })
     .then((r) => r.data);
+
+export const getQueryMatches = (uploadId, queryFeatures) =>
+  api
+    .post(`/api/frames/${uploadId}/query_matches`, { query_features: queryFeatures })
+    .then((r) => r.data);

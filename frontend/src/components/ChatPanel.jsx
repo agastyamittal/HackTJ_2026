@@ -18,6 +18,8 @@ export default function ChatPanel({ onResultsChange }) {
       const queryFeatures = data.query_features || [];
       setFeatures(queryFeatures);
       setSearched(true);
+      // Persist so CameraView can pick up features after navigation
+      sessionStorage.setItem("queryFeatures", JSON.stringify(queryFeatures));
       if (onResultsChange) onResultsChange(data.results || [], data.camera_scores || {}, queryFeatures);
     } catch (err) {
       setError("Search failed. Is the backend running?");
