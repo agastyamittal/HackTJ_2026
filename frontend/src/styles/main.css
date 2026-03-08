@@ -26,10 +26,19 @@ a:hover { text-decoration: underline; }
 }
 
 .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: 700;
   color: #63b3ed;
   letter-spacing: 1px;
+}
+
+.navbar-logo {
+  height: 32px;
+  width: auto;
+  border-radius: 4px;
 }
 
 .navbar-links { display: flex; gap: 24px; }
@@ -259,6 +268,29 @@ a:hover { text-decoration: underline; }
   top: 0;
 }
 
+.video-pause-btn {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 18px;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.video-pause-btn:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
 .annotations-panel {
   background: #1a1d27;
   border-left: 1px solid #2d3748;
@@ -340,6 +372,84 @@ a:hover { text-decoration: underline; }
 .map-container {
   height: calc(100vh - 48px);
   width: 100%;
+}
+
+.map-video-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+}
+
+.map-video-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 75%;
+  max-width: 1000px;
+  height: 80%;
+  max-height: 700px;
+  background: #0f1117;
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.map-video-overlay .camera-view-layout {
+  flex: 1;
+  height: 100%;
+}
+
+.map-video-overlay-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 1001;
+  background: rgba(26, 29, 39, 0.85);
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 16px;
+  height: 32px;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.map-video-overlay-close:hover {
+  background: #e53e3e;
+  border-color: #e53e3e;
+}
+
+/* ── Map Toast ────────────────────────────────────────────────────────────── */
+.map-toast {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  background: #2d3748;
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  color: #fc8181;
+  font-size: 13px;
+  padding: 10px 16px;
+  z-index: 1100;
+  animation: toast-fade 3s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes toast-fade {
+  0%   { opacity: 0; transform: translateY(8px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  80%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(8px); }
 }
 
 /* ── Loading spinner ──────────────────────────────────────────────────────── */

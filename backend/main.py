@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pipeline.detector import load_model as load_yolo
 from pipeline.embedder import load_model as load_clip
+from pipeline.classifier import load_classifiers
 from routers import cameras, videos, search, frames, stream, track
 
 
@@ -13,12 +14,14 @@ async def lifespan(app: FastAPI):
     load_yolo()
     print("[startup] Loading CLIP model...")
     load_clip()
-    print("[startup] Models ready. Sentinal is running.")
+    print("[startup] Loading attribute classifiers...")
+    load_classifiers()
+    print("[startup] Models ready. Argus is running.")
     yield
     print("[shutdown] Shutting down.")
 
 
-app = FastAPI(title="Sentinal", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Argus", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

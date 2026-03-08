@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { search } from "../api";
-import SearchResults from "./SearchResults";
 
-export default function ChatPanel({ highlightedCameraIds, onResultsChange }) {
+export default function ChatPanel({ onResultsChange }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const [features, setFeatures] = useState([]);
+  const [searched, setSearched] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -17,17 +15,15 @@ export default function ChatPanel({ highlightedCameraIds, onResultsChange }) {
     setError(null);
     try {
       const data = await search(query.trim());
-      setResults(data.results || []);
-      if (onResultsChange) onResultsChange(data.results || []);
+      const queryFeatures = data.query_features || [];
+      setFeatures(queryFeatures);
+      setSearched(true);
+      if (onResultsChange) onResultsChange(data.results || [], data.camera_scores || {}, queryFeatures);
     } catch (err) {
       setError("Search failed. Is the backend running?");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSelect = (result) => {
-    navigate(`/camera/${result.upload_id}?t=${result.timestamp_sec}`);
   };
 
   return (
@@ -46,12 +42,28 @@ export default function ChatPanel({ highlightedCameraIds, onResultsChange }) {
           </button>
         </div>
         {error && <div className="text-sm mt-2" style={{ color: "#fc8181" }}>{error}</div>}
-        {!loading && results.length > 0 && (
-          <div className="text-sm text-muted mt-2">{results.length} result(s)</div>
-        )}
       </form>
-      <SearchResults results={results} onSelect={handleSelect} />
-      {!loading && results.length === 0 && !error && (
+      {searched && !loading && !error && (
+        <div style={{ padding: "10px 0", fontSize: 12, color: "#a0aec0" }}>
+          {features.length > 0 ? (
+            <>
+              <div style={{ marginBottom: 6, color: "#718096" }}>Scanning for:</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                {features.map((f, i) => (
+                  <span key={i} style={{
+                    background: "#2d3748", color: "#cbd5e0",
+                    borderRadius: 3, padding: "2px 6px", fontSize: 11
+                  }}>{f}</span>
+                ))}
+              </div>
+              <div style={{ marginTop: 8, color: "#718096" }}>Map updated — green = strong match.</div>
+            </>
+          ) : (
+            <div style={{ color: "#718096" }}>No structured features found. Map not updated.</div>
+          )}
+        </div>
+      )}
+      {!searched && (
         <div className="search-status">Enter a description to search footage.</div>
       )}
     </>

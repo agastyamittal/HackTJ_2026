@@ -3,10 +3,8 @@ import React from "react";
 const CLASS_COLORS = {
   person: "#fc8181",
   car: "#63b3ed",
-  truck: "#68d391",
-  bicycle: "#f6e05e",
-  motorcycle: "#b794f4",
   bus: "#f6ad55",
+  truck: "#68d391",
 };
 
 function classColor(cls) {
@@ -39,6 +37,27 @@ export default function AnnotationsPanel({ detections, timestamp, onTrack, track
               </span>
               <span className="detection-conf">{(d.confidence * 100).toFixed(0)}%</span>
             </div>
+            {d.attributes && d.attributes.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                {d.attributes.map((attr, j) => {
+                  const name = typeof attr === "object" ? attr.name : attr;
+                  const conf = typeof attr === "object" ? attr.confidence : null;
+                  return (
+                    <span key={j} style={{
+                      fontSize: 10, background: "#2d3748", color: "#cbd5e0",
+                      borderRadius: 3, padding: "1px 5px", display: "inline-flex", alignItems: "center", gap: 3
+                    }}>
+                      {name}
+                      {conf != null && (
+                        <span style={{ color: "#718096", fontSize: 9 }}>
+                          {(conf * 100).toFixed(0)}%
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
             {onTrack && d.class.toLowerCase().includes("person") && (
               <button
                 className="btn btn-sm btn-ghost"

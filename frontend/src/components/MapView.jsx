@@ -14,6 +14,30 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
+const SHADOW_URL =
+  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png";
+const COLOR_MARKER_BASE =
+  "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img";
+
+function colorIcon(color) {
+  return new L.Icon({
+    iconUrl: `${COLOR_MARKER_BASE}/marker-icon-${color}.png`,
+    shadowUrl: SHADOW_URL,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+}
+
+const statusIcons = {
+  green: colorIcon("green"),
+  yellow: colorIcon("gold"),
+  red: colorIcon("red"),
+};
+
+const defaultIcon = colorIcon("blue");
+
 function FitBounds({ cameras }) {
   const map = useMap();
 
@@ -26,7 +50,7 @@ function FitBounds({ cameras }) {
   return null;
 }
 
-export default function MapView({ onCameraClick }) {
+export default function MapView({ onCameraClick, cameraScores = {} }) {
   const [cameras, setCameras] = useState([]);
 
   useEffect(() => {
@@ -63,6 +87,7 @@ export default function MapView({ onCameraClick }) {
         <Marker
           key={cam.id}
           position={[cam.lat, cam.lon]}
+          icon={statusIcons[cameraScores[String(cam.id)]?.status || cam.status] || defaultIcon}
           eventHandlers={{
             click: () => onCameraClick && onCameraClick(cam),
           }}

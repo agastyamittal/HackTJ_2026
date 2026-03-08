@@ -6,10 +6,8 @@ import Timeline from "./Timeline";
 const CLASS_COLORS = {
   person: "#fc8181",
   car: "#63b3ed",
-  truck: "#68d391",
-  bicycle: "#f6e05e",
-  motorcycle: "#b794f4",
   bus: "#f6ad55",
+  truck: "#68d391",
 };
 
 function classColor(cls) {
@@ -30,6 +28,7 @@ export default function VideoPlayer({ uploadId, initialTime = 0, matchFrames }) 
   const [framesIndex, setFramesIndex] = useState([]);
   const [trackResult, setTrackResult] = useState(null);
   const [tracking, setTracking] = useState(false);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (!uploadId) return;
@@ -126,18 +125,35 @@ export default function VideoPlayer({ uploadId, initialTime = 0, matchFrames }) 
     if (videoRef.current) videoRef.current.currentTime = sec;
   };
 
+  const togglePlayPause = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play();
+      setPaused(false);
+    } else {
+      video.pause();
+      setPaused(true);
+    }
+  };
+
   return (
     <div className="camera-view-layout">
       <div className="video-panel">
         <video
           ref={videoRef}
           src={videoStreamUrl(uploadId)}
-          controls
+          autoPlay
+          muted
+          playsInline
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={() => setDuration(videoRef.current?.duration || 0)}
           className="video-panel-video"
         />
         <canvas ref={canvasRef} />
+        <button className="video-pause-btn" onClick={togglePlayPause}>
+          {paused ? "▶" : "⏸"}
+        </button>
       </div>
 
       <AnnotationsPanel
