@@ -19,7 +19,7 @@ function classColor(cls) {
   return `hsl(${Math.abs(h) % 360}, 65%, 65%)`;
 }
 
-export default function VideoPlayer({ uploadId, initialTime = 0, matchFrames }) {
+export default function VideoPlayer({ uploadId, initialTime = 0, matchFrames, onTrackResult }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -114,6 +114,7 @@ export default function VideoPlayer({ uploadId, initialTime = 0, matchFrames }) 
     try {
       const res = await trackPerson(uploadId, frame.frame_idx, detIdx);
       setTrackResult(res);
+      onTrackResult && onTrackResult(res);
     } catch {
       alert("Tracking failed");
     } finally {
