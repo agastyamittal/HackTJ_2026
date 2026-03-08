@@ -58,8 +58,14 @@ def detect(image) -> list[dict]:
         }
 
         # Crop and run attribute classifier
-        x1i, y1i, x2i, y2i = int(x1), int(y1), int(x2), int(y2)
-        if x2i > x1i and y2i > y1i:
+        # Shrink by 10% horizontally and 5% from top to reduce background bleed
+        w_pad = int((x2 - x1) * 0.10)
+        h_pad = int((y2 - y1) * 0.05)
+        x1i = max(0, int(x1) + w_pad)
+        y1i = max(0, int(y1) + h_pad)
+        x2i = min(image.width,  int(x2) - w_pad)
+        y2i = min(image.height, int(y2))
+        if x2i - x1i >= 20 and y2i - y1i >= 20:
             crop = image.crop((x1i, y1i, x2i, y2i))
             if cls_name == "person":
                 det["attributes"] = classify_person(crop)

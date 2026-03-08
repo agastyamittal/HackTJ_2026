@@ -89,6 +89,7 @@ DETECTABLE_PERSON_ATTRS = {
     "upperBodyLongSleeve", "upperBodyShortSleeve",
     "upperBodyCasual", "upperBodyFormal",
     "upperBodyTshirt", "upperBodyHoodie", "upperBodyJacket",
+    "lowerBodyBlue", "lowerBodyRed", "lowerBodyBlack", "lowerBodyWhite", "lowerBodyGreen",
     "lowerBodyJeans", "lowerBodyTrousers", "lowerBodyShorts", "lowerBodySkirt",
     "carryingBackpack", "carryingBag", "carryingMessengerBag",
     "personalMale", "personalFemale",
@@ -117,12 +118,27 @@ def parse_person_query(query: str) -> list[str]:
                 attrs.append(token)
                 break
 
+    # explicit body-region qualifier: "lower body {color}", "lower {color}", "bottom {color}"
+    _lower_region_match = re.search(
+        rf"\b(?:lower\s+body|lower|bottom)\s+({'|'.join(_COLOR_WORDS.keys())})\b", text
+    )
+    _upper_region_match = re.search(
+        rf"\b(?:upper\s+body|upper|top)\s+({'|'.join(_COLOR_WORDS.keys())})\b", text
+    )
+
+    if _lower_region_match:
+        attrs.append(f"lowerBody{_COLOR_WORDS[_lower_region_match.group(1)]}")
+    if _upper_region_match:
+        attrs.append(f"upperBody{_COLOR_WORDS[_upper_region_match.group(1)]}")
+
     # upper body: standalone color (e.g. "red hoodie" already handled, but "wearing red")
-    if not any(a.startswith("upperBody") and a[9:9+3] not in ("Lon", "Sho", "Cas", "For", "Tsh", "Hoo", "Jac") for a in attrs):
-        for color, cap in _COLOR_WORDS.items():
-            if re.search(rf"\b{re.escape(color)}\b", text):
-                attrs.append(f"upperBody{cap}")
-                break
+    # Skip if an explicit region qualifier already assigned this color
+    if not _lower_region_match and not _upper_region_match:
+        if not any(a.startswith("upperBody") and a[9:9+3] not in ("Lon", "Sho", "Cas", "For", "Tsh", "Hoo", "Jac") for a in attrs):
+            for color, cap in _COLOR_WORDS.items():
+                if re.search(rf"\b{re.escape(color)}\b", text):
+                    attrs.append(f"upperBody{cap}")
+                    break
 
     # lower body: color + garment
     for garment, token in sorted(_LOWER_GARMENTS.items(), key=lambda x: -len(x[0])):

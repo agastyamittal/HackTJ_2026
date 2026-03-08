@@ -21,7 +21,7 @@ from dataset_peta import PETADataset, NUM_ATTRS, TARGET_ATTRS
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 BATCH_SIZE  = 32
-EPOCHS      = 20
+EPOCHS      = 40
 LR          = 1e-4
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
 OUTPUT_PATH = Path(__file__).parent.parent / "backend" / "models" / "person_attributes.pt"
@@ -78,8 +78,15 @@ def main():
     train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True,  num_workers=0, pin_memory=True)
     val_loader   = DataLoader(val_ds,   batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
 
-    model     = build_model().to(DEVICE)
-    criterion = nn.BCEWithLogitsLoss()
+    model = build_model().to(DEVICE)
+
+    # Compute per-attribute pos_weight to handle class imbalance
+    all_labels = torch.stack([train_ds[i][1] for i in range(len(train_ds))])
+    pos_counts = all_labels.sum(dim=0).clamp(min=1.0)
+    neg_counts = len(train_ds) - pos_counts
+    pos_weight = (neg_counts / pos_counts).to(DEVICE)
+    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+
     optimizer = AdamW(model.parameters(), lr=LR, weight_decay=1e-4)
     scheduler = CosineAnnealingLR(optimizer, T_max=EPOCHS)
 

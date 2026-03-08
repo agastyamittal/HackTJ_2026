@@ -131,10 +131,43 @@ def _hsv_upper_color(crop: Image.Image) -> tuple[str, float] | None:
     return None
 
 
+def _hsv_lower_color(crop: Image.Image) -> tuple[str, float] | None:
+    """
+    Detect dominant clothing color from the lower 40% of a person crop using HSV.
+    Returns (attr_name, confidence) or None if no dominant color is found.
+    """
+    try:
+        w, h = crop.size
+        lower = crop.crop((0, int(h * 0.6), w, h)).convert("RGB")
+        arr = np.array(lower, dtype=np.uint8)
+        hsv = cv2.cvtColor(arr, cv2.COLOR_RGB2HSV)
+        H, S, V = hsv[:, :, 0], hsv[:, :, 1], hsv[:, :, 2]
+        total = float(H.size)
+
+        masks = {
+            "lowerBodyBlack": (V < 55),
+            "lowerBodyWhite": (S < 40) & (V > 190),
+            "lowerBodyRed":   ((H < 12) | (H > 168)) & (S > 80) & (V > 60),
+            "lowerBodyBlue":  (H >= 100) & (H <= 135) & (S > 70) & (V > 50),
+            "lowerBodyGreen": (H >= 35) & (H <= 90) & (S > 70) & (V > 50),
+        }
+
+        counts = {name: float(mask.sum()) / total for name, mask in masks.items()}
+        best_name = max(counts, key=counts.get)
+        best_ratio = counts[best_name]
+
+        if best_ratio >= 0.12:
+            return best_name, round(min(best_ratio * 2.0, 0.98), 3)
+    except Exception:
+        pass
+    return None
+
+
 # Mutually exclusive attribute groups — pick only the top-confidence attr per group.
 # Attributes not in any group are shown independently if above threshold.
 _EXCLUSIVE_GROUPS = [
     ["upperBodyBlue", "upperBodyRed", "upperBodyBlack", "upperBodyWhite", "upperBodyGreen"],
+    ["lowerBodyBlue", "lowerBodyRed", "lowerBodyBlack", "lowerBodyWhite", "lowerBodyGreen"],
     ["upperBodyLongSleeve", "upperBodyShortSleeve"],
     ["upperBodyCasual", "upperBodyFormal"],
     ["upperBodyTshirt", "upperBodyHoodie", "upperBodyJacket"],
@@ -163,14 +196,21 @@ def classify_person(crop: Image.Image) -> list[dict]:
 
         attr_probs = dict(zip(_person_attrs, probs.tolist()))
 
-        # Override color group with HSV detection (much more reliable for basic colors)
-        hsv_result = _hsv_upper_color(crop)
-        if hsv_result:
-            hsv_attr, hsv_conf = hsv_result
-            color_group = _EXCLUSIVE_GROUPS[0]  # upper body color group
-            for attr in color_group:
-                attr_probs[attr] = 0.05  # suppress all ML color predictions
-            attr_probs[hsv_attr] = hsv_conf  # inject HSV winner
+        # Override upper body color group with HSV detection (much more reliable)
+        hsv_upper = _hsv_upper_color(crop)
+        if hsv_upper:
+            hsv_attr, hsv_conf = hsv_upper
+            for attr in _EXCLUSIVE_GROUPS[0]:
+                attr_probs[attr] = 0.05
+            attr_probs[hsv_attr] = hsv_conf
+
+        # Inject lower body color via HSV (no ML model for these)
+        hsv_lower = _hsv_lower_color(crop)
+        if hsv_lower:
+            hsv_attr, hsv_conf = hsv_lower
+            for attr in _EXCLUSIVE_GROUPS[1]:
+                attr_probs[attr] = 0.05
+            attr_probs[hsv_attr] = hsv_conf
 
         result = []
 

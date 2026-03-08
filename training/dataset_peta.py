@@ -92,14 +92,24 @@ def _load_image(img_path: Path) -> Image.Image:
 class PETADataset(Dataset):
     def __init__(self, train: bool = True, train_split: float = 0.85):
         self.samples = []   # list of (image_path, label_vector)
-        self.transform = transforms.Compose([
-            transforms.Resize((256, 128)),   # portrait crop H×W
-            transforms.RandomHorizontalFlip() if train else transforms.Lambda(lambda x: x),
-            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1) if train else transforms.Lambda(lambda x: x),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225]),
-        ])
+        if train:
+            self.transform = transforms.Compose([
+                transforms.Resize((256, 128)),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomRotation(degrees=8),
+                transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.05),
+                transforms.ToTensor(),
+                transforms.RandomErasing(p=0.3, scale=(0.02, 0.15)),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225]),
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.Resize((256, 128)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225]),
+            ])
 
         all_samples = []
         for subset_dir in SUBSETS:
